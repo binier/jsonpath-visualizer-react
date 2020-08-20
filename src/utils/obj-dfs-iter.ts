@@ -35,7 +35,7 @@ export function objDfsIter(obj: Record<string, any>): ObjDfsIter {
       const key = keys[index],
             value = obj[key];
 
-      if (typeof value === 'object')
+      if (typeof value === 'object' && value)
         nestedIter = objDfsIter(value);
 
       return { key, value };
