@@ -3,14 +3,14 @@ import { ObjDfsIter } from './obj-dfs-iter';
 describe('Object DFS Iterator', () => {
   it('object containing null value', () => {
     const res = new ObjDfsIter({ name: null }).nextAll();
-    
+
     expect(res.length).toEqual(1);
     expect(res[0]).toMatchObject({ key: 'name', value: null });
   });
 
   it('object containing undefined value', () => {
     const res = new ObjDfsIter({ name: undefined }).nextAll();
-    
+
     expect(res.length).toEqual(1);
     expect(res[0]).toMatchObject({ key: 'name', value: undefined });
   });
@@ -63,5 +63,21 @@ describe('Object DFS Iterator', () => {
     expect(res[7]).toMatchObject({ key: 'name', value: 'user1' });
     expect(res[8].key).toEqual('0');
     expect(res[9].key).toEqual('users');
+  });
+
+  it('should return correct results when changing iteration directions', () => {
+    const iter = new ObjDfsIter({
+      users: [
+        { name: 'user1', age: 22 },
+        { name: 'user2', age: 23 },
+      ],
+      balls: ['ball1', 'ball2'],
+    }).nextSkipAll();
+
+    iter.prevAll(4);
+    iter.next();
+    expect(iter.prev()).toMatchObject({ key: 'age', value: 23, depth: 2 });
+    iter.nextAll(2);
+    expect(iter.prev()).toMatchObject({ key: 'balls', value: ['ball1', 'ball2'], depth: 0 });
   });
 });
