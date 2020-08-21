@@ -1,22 +1,22 @@
-import { objDfsIter } from './obj-dfs-iter';
+import { ObjDfsIter } from './obj-dfs-iter';
 
 describe('Object DFS Iterator', () => {
   it('object containing null value', () => {
-    const res = objDfsIter({ name: null }).nextAll();
+    const res = new ObjDfsIter({ name: null }).nextAll();
     
     expect(res.length).toEqual(1);
     expect(res[0]).toMatchObject({ key: 'name', value: null });
   });
 
   it('object containing undefined value', () => {
-    const res = objDfsIter({ name: undefined }).nextAll();
+    const res = new ObjDfsIter({ name: undefined }).nextAll();
     
     expect(res.length).toEqual(1);
     expect(res[0]).toMatchObject({ key: 'name', value: undefined });
   });
 
   it('next() outputs in correct order', () => {
-    const iter = objDfsIter({
+    const iter = new ObjDfsIter({
       users: [
         { name: 'user1', age: 22 },
         { name: 'user2', age: 23 },
