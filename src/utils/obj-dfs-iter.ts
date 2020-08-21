@@ -55,11 +55,13 @@ export class ObjDfsIter {
 
   prev(): ObjDfsIterValue | Symbol {
     if (this.nestedIter) {
+      const wasNestedEmpty = this.nestedIter.index === -1;
       const nestedPrev = this.nestedIter.prev();
       if (nestedPrev !== ITER_END)
         return nestedPrev;
       this.nestedIter = undefined;
-      return { ...this.getKeyValue(this.index), depth: this.depth };
+      if (!wasNestedEmpty)
+        return { ...this.getKeyValue(this.index), depth: this.depth };
     }
     if (--this.index < 0)
       return ITER_END;
