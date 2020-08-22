@@ -1,7 +1,23 @@
-export interface ObjDfsIterValue {
-  key: string;
-  value: any;
-  depth: number;
+export class ObjDfsIterValue {
+  constructor(
+    public key: string,
+    public value: any,
+    public depth: number,
+    public parent: ObjDfsIterValue | null = null
+  ) { }
+
+  type() {
+    if (typeof this.value === 'object' && Array.isArray(this.value))
+      return 'array';
+    return typeof this.value;
+  }
+
+  parents() {
+    const parents = [];
+    let cur: ObjDfsIterValue | null = this;
+    while ((cur = cur.parent)) parents.push(cur);
+    return parents;
+  }
 }
 
 export const ITER_END = Symbol('Iterator End');
@@ -19,6 +35,7 @@ export class ObjDfsIter {
 
   constructor(
     private obj: Record<string, any>,
+    private parent: ObjDfsIterValue | null = null,
     { depth, index } = { depth: 0, index: -1 }
   ) {
     this.depth = depth;
@@ -29,6 +46,11 @@ export class ObjDfsIter {
   private getKeyValue(index = this.index) {
     const key = this.keys[index];
     return { key, value: this.obj[key] };
+  }
+
+  private iterValue(index = this.index): ObjDfsIterValue {
+    const {key, value} = this.getKeyValue(this.index);
+    return new ObjDfsIterValue(key, value, this.depth, this.parent);
   }
 
   next(): ObjDfsIterValue | Symbol {
@@ -42,15 +64,17 @@ export class ObjDfsIter {
     if (++this.index === this.keys.length)
       return ITER_END;
 
-    const {key, value} = this.getKeyValue(this.index);
+    const selfIterValue = this.iterValue();
+    const { value } = selfIterValue
 
     if (typeof value === 'object' && value)
       this.nestedIter = new ObjDfsIter(
         value,
+        selfIterValue,
         { index: -1, depth: this.depth + 1 }
       );
 
-    return { key, value, depth: this.depth };
+    return selfIterValue;
   }
 
   prev(): ObjDfsIterValue | Symbol {
@@ -60,22 +84,25 @@ export class ObjDfsIter {
       if (nestedPrev !== ITER_END)
         return nestedPrev;
       this.nestedIter = undefined;
+
       if (!wasNestedEmpty)
-        return { ...this.getKeyValue(this.index), depth: this.depth };
+        return this.iterValue();
     }
     if (--this.index < 0)
       return ITER_END;
 
-    const {key, value} = this.getKeyValue(this.index);
+    const selfIterValue = this.iterValue();
+    const { value } = selfIterValue
     if (typeof value === 'object' && value) {
       this.nestedIter = new ObjDfsIter(
           value,
+          selfIterValue,
           { index: -1, depth: this.depth + 1 }
         )
         .nextSkipAll();
       return this.prev();
     }
-    return { key, value, depth: this.depth };
+    return selfIterValue;
   }
 
   nextSkip(count: number) {
