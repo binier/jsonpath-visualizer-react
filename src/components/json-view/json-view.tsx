@@ -12,7 +12,7 @@ const getEl = () => document.getElementById('json-view-container');
 
 export default (props: Props) => {
   const state = useLocalStore(() => ({
-    /** 
+    /**
      * elements array can be huge and we don't need for it to be
      * observable since we won't be mutating it.
      * */
@@ -119,15 +119,134 @@ export default (props: Props) => {
     return (
       <div id="json-view-container" className="overflow-auto text-left bg-gray-300 shadow" style={{ height: '85vh' }}>
         <div style={{ height: state.scrollTop }}></div>
-        {
-          state.visible.map(x => (
-            <div key={x.path.toString() + (x.end ? '$' : '')} style={{height: state.elHeight}}>
-              {x.path.toString()}
-            </div>
-          ))
-        }
+        <Elements elements={state.visible} eachHeight={state.elHeight} />
         <div style={{ height: state.scrollBottom}}></div>
       </div>
     );
   });
 };
+
+function Elements(props: { elements: ElementData[], eachHeight: number }) {
+  return (
+    <>
+    {
+      props.elements.map(element => Element({
+        element,
+        height: props.eachHeight,
+      }))
+    }
+    </>
+  );
+}
+
+type FullProps<T = { [key: string]: any }> = T & React.HTMLProps<any>;
+
+function genElementProps(
+  element: ElementData,
+  height: number,
+  style: React.CSSProperties = {}
+): FullProps {
+  return {
+    height,
+    key: element.path + (element.end ? '$' : ''),
+    style: {
+      paddingLeft: element.path.length * 20,
+      ...style,
+    },
+  };
+}
+
+interface ElementProps {
+  element: ElementData;
+  height: number;
+};
+
+function Element({element, height}: ElementProps) {
+  const props = genElementProps(element, height);
+
+  if (element.end) {
+    return (
+      <div {...props}>
+        <JsonBracket type={element.type} closing={!!element.end} />
+        {!element.isLastChild && <JsonComma />}
+      </div>
+    );
+  }
+
+  if (element.type === 'object')
+    return (
+      <div {...props}>
+        <JsonObject element={element} />
+      </div>
+    );
+  if (element.type === 'array')
+    return (
+      <div {...props}>
+        <JsonArray element={element} />
+      </div>
+    );
+
+  return (
+    <div {...props}>
+      <JsonScalar element={element} />
+    </div>
+  );
+}
+
+const JsonBracket = ({type, closing}: {
+  type: 'array' | 'object',
+  closing: boolean,
+}) => (
+  <span className={`json-bracket json-bracket-${type}`}>
+    {(type === 'array' ? '[]' : '{}')[closing ? 1 : 0]}
+  </span>
+);
+
+const JsonComma = () => (
+  <span className="json-comma">,</span>
+);
+
+const JsonColon = () => (
+  <span className="json-colon">:</span>
+);
+
+const JsonField = ({name}: {name: string}) => (
+  <span className="json-field">{name}</span>
+);
+
+const JsonValue = ({value}: {value: any}) => (
+  <span className="json-value">
+    {typeof value === 'string' ? `"${value}"` : value}
+  </span>
+);
+
+const JsonScalar = ({element}: { element: ElementData }) => (
+  <>
+    <JsonField name={element.path[element.path.length - 1]} />
+    <JsonColon />
+    <JsonValue value={element.value} />
+    {!element.isLastChild && <JsonComma />}
+  </>
+);
+
+/** array or object */
+const JsonNested = ({element}: {element: ElementData}) => {
+  const field = element.path[element.path.length - 1];
+  const isRoot = !!element.path.length;
+  return (
+    <>
+      {isRoot &&
+        <>
+          <JsonField name={field} />
+          <JsonColon />
+        </>
+      }
+      <JsonBracket type={element.type} closing={false} />
+      {element.childrenCount === 0 &&
+        <JsonBracket type={element.type} closing={true} />}
+    </>
+  );
+};
+
+const JsonArray = JsonNested;
+const JsonObject = JsonNested;
