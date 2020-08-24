@@ -15,19 +15,23 @@ export interface ElementData<T extends ElementTypes = any> {
   value: ElementTypesMap[T];
   collapsed?: boolean;
   childrenCount?: number;
+  isLastChild?: boolean;
   end?: boolean;
 }
 
 function* jsonToElementsGen(
   json: any, path: string[] = []
 ): Generator<ElementData> {
-  for (let [k, v] of Object.entries(json)) {
+  const entries = Object.entries(json);
+  let index = 0;
+  for (let [k, v] of entries) {
     const elData = {
       type: Array.isArray(v) ? 'array' : typeof v,
       path: [...path, k],
       value: v,
       collapsed: false,
       childrenCount: 0,
+      isLastChild: ++index === entries.length,
     };
 
     yield elData;
@@ -51,6 +55,7 @@ export function jsonToElements(json: any) {
     value: json,
     collapsed: false,
     childrenCount: 0,
+    isLastChild: true,
   };
 
   const list = [root, ...jsonToElementsGen(json)];
