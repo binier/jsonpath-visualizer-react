@@ -1,7 +1,18 @@
-export interface ElementData {
-  type: string;
+interface ElementTypesMap {
+  'array': Array<any>;
+  'object': Record<string, any>;
+  'string': string;
+  'boolean': boolean;
+  'number': number;
+  'undefined': undefined;
+}
+
+export type ElementTypes = keyof ElementTypesMap;
+
+export interface ElementData<T extends ElementTypes = any> {
+  type: T;
   path: string[];
-  value: any;
+  value: ElementTypesMap[T];
   collapsed?: boolean;
   childrenCount?: number;
   end?: boolean;
