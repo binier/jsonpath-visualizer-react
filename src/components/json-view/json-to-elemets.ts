@@ -34,5 +34,20 @@ function* jsonToElementsGen(
 }
 
 export function jsonToElements(json: any) {
-  return [...jsonToElementsGen(json)];
+  const root = {
+    type: Array.isArray(json) ? 'array' : typeof json,
+    path: [],
+    value: json,
+    collapsed: false,
+    childrenCount: 0,
+  };
+
+  const list = [root, ...jsonToElementsGen(json)];
+
+  root.childrenCount = list.length;
+
+  if (root.childrenCount > 0)
+    list.push({ ...root, end: true })
+
+  return list;
 }
