@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocalStore, useObserver } from 'mobx-react';
 import { debounce } from '../../utils';
-import { JsonNode, jsonToElements } from './json-to-nodes';
+import { JsonNode, jsonToElements } from '../../utils/json-to-nodes';
 import { observable } from 'mobx';
 
 interface Props {
