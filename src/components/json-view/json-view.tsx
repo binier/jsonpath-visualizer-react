@@ -30,7 +30,7 @@ export default (props: Props) => {
     set elements(value: JsonNode[]) { state.shallow.elements = value; },
 
     get scrollTop() {
-      return (state.left-1) * state.elHeight;
+      return (state.left - 1) * state.elHeight;
     },
 
     get scrollBottom() {
@@ -69,7 +69,7 @@ export default (props: Props) => {
     },
 
     moveNext(steps = 1) {
-      let {index, left, right, visible, elCount, elements} = state;
+      let { index, left, right, visible, elCount, elements } = state;
       for (let i = 0; i < steps; ++i) {
         if (index >= elements.length) break;
         ++left;
@@ -79,11 +79,11 @@ export default (props: Props) => {
           elements[index++],
         ];
       }
-      Object.assign(state, {index, left, right, visible});
+      Object.assign(state, { index, left, right, visible });
     },
 
     movePrev(steps = 1) {
-      let {index, left, right, visible, elements} = state;
+      let { index, left, right, visible, elements } = state;
       for (let i = 0; i < steps; ++i) {
         if (index <= visible.length) break;
         --left;
@@ -93,7 +93,7 @@ export default (props: Props) => {
           ...visible.slice(0, -1),
         ];
       }
-      Object.assign(state, {index, left, right, visible});
+      Object.assign(state, { index, left, right, visible });
     },
   }));
 
@@ -120,7 +120,7 @@ export default (props: Props) => {
       <div id="json-view-container" className="overflow-auto text-left bg-gray-300 shadow" style={{ height: '85vh' }}>
         <div style={{ height: state.scrollTop }}></div>
         <Elements elements={state.visible} eachHeight={state.elHeight} />
-        <div style={{ height: state.scrollBottom}}></div>
+        <div style={{ height: state.scrollBottom }}></div>
       </div>
     );
   });
@@ -129,12 +129,12 @@ export default (props: Props) => {
 function Elements(props: { elements: JsonNode[], eachHeight: number }) {
   return (
     <>
-    {
-      props.elements.map(element => Element({
-        element,
-        height: props.eachHeight,
-      }))
-    }
+      {
+        props.elements.map(element => Element({
+          element,
+          height: props.eachHeight,
+        }))
+      }
     </>
   );
 }
@@ -161,7 +161,7 @@ interface ElementProps {
   height: number;
 };
 
-function Element({element, height}: ElementProps) {
+function Element({ element, height }: ElementProps) {
   const props = genElementProps(element, height);
 
   if (element.end) {
@@ -193,14 +193,14 @@ function Element({element, height}: ElementProps) {
   );
 }
 
-const JsonBracket = ({type, closing}: {
+const JsonBracket = ({ type, closing }: {
   type: 'array' | 'object',
   closing: boolean,
 }) => (
-  <span className={`json-bracket json-bracket-${type}`}>
-    {(type === 'array' ? '[]' : '{}')[closing ? 1 : 0]}
-  </span>
-);
+    <span className={`json-bracket json-bracket-${type}`}>
+      {(type === 'array' ? '[]' : '{}')[closing ? 1 : 0]}
+    </span>
+  );
 
 const JsonComma = () => (
   <span className="json-comma">,</span>
@@ -210,17 +210,17 @@ const JsonColon = () => (
   <span className="json-colon">:</span>
 );
 
-const JsonField = ({name}: {name: string}) => (
+const JsonField = ({ name }: { name: string }) => (
   <span className="json-field">{name}</span>
 );
 
-const JsonValue = ({value}: {value: any}) => (
+const JsonValue = ({ value }: { value: any }) => (
   <span className="json-value">
     {typeof value === 'string' ? `"${value}"` : value}
   </span>
 );
 
-const JsonScalar = ({element}: { element: JsonNode }) => (
+const JsonScalar = ({ element }: { element: JsonNode }) => (
   <>
     <JsonField name={element.path[element.path.length - 1]} />
     <JsonColon />
@@ -230,7 +230,7 @@ const JsonScalar = ({element}: { element: JsonNode }) => (
 );
 
 /** array or object */
-const JsonNested = ({element}: {element: JsonNode}) => {
+const JsonNested = ({ element }: { element: JsonNode }) => {
   const field = element.path[element.path.length - 1];
   const isRoot = !!element.path.length;
   return (
