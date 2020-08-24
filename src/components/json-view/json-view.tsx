@@ -51,7 +51,7 @@ export default (props: Props) => {
       state.height = height;
       state.index = 0;
       state.left = -state.elCount;
-      state.right = state.elements.length - 1;
+      state.right = state.elements.length;
       state.visible = [];
       state.moveNext(state.elCount);
       // TODO: handle height change
@@ -71,7 +71,7 @@ export default (props: Props) => {
     moveNext(steps = 1) {
       let {index, left, right, visible, elCount, elements} = state;
       for (let i = 0; i < steps; ++i) {
-        if (index + 1 >= elements.length) break;
+        if (index >= elements.length) break;
         ++left;
         --right;
         visible = [
