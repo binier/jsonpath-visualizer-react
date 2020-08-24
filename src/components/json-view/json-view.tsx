@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocalStore, useObserver } from 'mobx-react';
 import { debounce } from '../../utils';
-import { ElementData, jsonToElements } from './json-to-elemets';
+import { JsonNode, jsonToElements } from './json-to-elemets';
 import { observable } from 'mobx';
 
 interface Props {
@@ -17,17 +17,17 @@ export default (props: Props) => {
      * observable since we won't be mutating it.
      * */
     shallow: observable({
-      elements: new Array<ElementData>(),
+      elements: new Array<JsonNode>(),
     }, {}, { deep: false }),
     elHeight: 24,
     height: 0,
     index: 0,
     left: 0,
     right: 0,
-    visible: new Array<ElementData>(),
+    visible: new Array<JsonNode>(),
 
     get elements() { return state.shallow.elements; },
-    set elements(value: ElementData[]) { state.shallow.elements = value; },
+    set elements(value: JsonNode[]) { state.shallow.elements = value; },
 
     get scrollTop() {
       return (state.left-1) * state.elHeight;
@@ -126,7 +126,7 @@ export default (props: Props) => {
   });
 };
 
-function Elements(props: { elements: ElementData[], eachHeight: number }) {
+function Elements(props: { elements: JsonNode[], eachHeight: number }) {
   return (
     <>
     {
@@ -142,7 +142,7 @@ function Elements(props: { elements: ElementData[], eachHeight: number }) {
 type FullProps<T = { [key: string]: any }> = T & React.HTMLProps<any>;
 
 function genElementProps(
-  element: ElementData,
+  element: JsonNode,
   height: number,
   style: React.CSSProperties = {}
 ): FullProps {
@@ -157,7 +157,7 @@ function genElementProps(
 }
 
 interface ElementProps {
-  element: ElementData;
+  element: JsonNode;
   height: number;
 };
 
@@ -220,7 +220,7 @@ const JsonValue = ({value}: {value: any}) => (
   </span>
 );
 
-const JsonScalar = ({element}: { element: ElementData }) => (
+const JsonScalar = ({element}: { element: JsonNode }) => (
   <>
     <JsonField name={element.path[element.path.length - 1]} />
     <JsonColon />
@@ -230,7 +230,7 @@ const JsonScalar = ({element}: { element: ElementData }) => (
 );
 
 /** array or object */
-const JsonNested = ({element}: {element: ElementData}) => {
+const JsonNested = ({element}: {element: JsonNode}) => {
   const field = element.path[element.path.length - 1];
   const isRoot = !!element.path.length;
   return (

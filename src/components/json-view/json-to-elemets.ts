@@ -1,4 +1,4 @@
-interface ElementTypesMap {
+interface JsonNodeTypesMap {
   'array': Array<any>;
   'object': Record<string, any>;
   'string': string;
@@ -7,12 +7,12 @@ interface ElementTypesMap {
   'undefined': undefined;
 }
 
-export type ElementTypes = keyof ElementTypesMap;
+export type JsonNodeTypes = keyof JsonNodeTypesMap;
 
-export interface ElementData<T extends ElementTypes = any> {
+export interface JsonNode<T extends JsonNodeTypes = any> {
   type: T;
   path: string[];
-  value: ElementTypesMap[T];
+  value: JsonNodeTypesMap[T];
   collapsed?: boolean;
   childrenCount?: number;
   isLastChild?: boolean;
@@ -21,7 +21,7 @@ export interface ElementData<T extends ElementTypes = any> {
 
 function* jsonToElementsGen(
   json: any, path: string[] = []
-): Generator<ElementData> {
+): Generator<JsonNode> {
   const entries = Object.entries(json);
   let index = 0;
   for (let [k, v] of entries) {
