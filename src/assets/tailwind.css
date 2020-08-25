@@ -2,4 +2,39 @@
 
 @tailwind components;
 
+.json-view {
+  @apply p-2 overflow-auto text-sm text-left shadow;
+  height: 85vh;
+  background-color: #272822;
+  font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
+}
+
+.json-bracket, .json-comma, .json-colon {
+  color: #a3a9ad;
+}
+
+.json-colon {
+  @apply mr-2;
+}
+
+.json-field {
+  color: #a6e22e;
+}
+
+.json-value {
+  color: #ddd;
+}
+
+.json-value.json-value-string {
+  color: #e6db74;
+}
+
+.json-value.json-value-number {
+  color: #ae81ff;
+}
+
+.json-value.json-value-boolean {
+  color: #66d9ef;
+}
+
 @tailwind utilities;

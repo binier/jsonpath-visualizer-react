@@ -9,7 +9,7 @@ interface Props {
   json: Record<string, any>;
 }
 
-const getEl = () => document.getElementById('json-view-container');
+const getEl = () => document.getElementById('json-view');
 
 export default (props: Props) => {
   const state = useLocalStore(() => ({
@@ -118,10 +118,12 @@ export default (props: Props) => {
 
   return useObserver(() => {
     return (
-      <div id="json-view-container" className="overflow-auto text-left bg-gray-300 shadow" style={{ height: '85vh' }}>
-        <div style={{ height: state.scrollTop }}></div>
-        <Elements elements={state.visible} eachHeight={state.elHeight} />
-        <div style={{ height: state.scrollBottom }}></div>
+      <div className="json-view">
+        <div id="json-view" style={{ height: "100%", overflow: 'auto' }}>
+          <div style={{ height: state.scrollTop }}></div>
+          <Elements elements={state.visible} eachHeight={state.elHeight} />
+          <div style={{ height: state.scrollBottom }}></div>
+        </div>
       </div>
     );
   });

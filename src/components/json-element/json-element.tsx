@@ -76,8 +76,8 @@ const JsonField = ({ name }: { name: string }) => (
   <span className="json-field">{name}</span>
 );
 
-const JsonValue = ({ value }: { value: any }) => (
-  <span className="json-value">
+const JsonValue = ({ type, value }: { type: string, value: any }) => (
+  <span className={`json-value json-value-${type}`}>
     {typeof value === 'string' ? `"${value}"` : value}
   </span>
 );
@@ -86,7 +86,7 @@ const JsonScalar = ({ element }: { element: JsonNode }) => (
   <>
     <JsonField name={element.path[element.path.length - 1]} />
     <JsonColon />
-    <JsonValue value={element.value} />
+    <JsonValue type={element.type} value={element.value} />
     {!element.isLastChild && <JsonComma />}
   </>
 );
