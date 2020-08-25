@@ -9,9 +9,9 @@ function genElementProps(
   style: React.CSSProperties = {}
 ): FullProps {
   return {
-    height,
     key: element.path + (element.end ? '$' : ''),
     style: {
+      height,
       paddingLeft: element.path.length * 20,
       ...style,
     },
