@@ -2,8 +2,15 @@ import React, { useEffect } from 'react';
 import { useLocalStore, useObserver } from 'mobx-react';
 import { debounce } from '../../utils';
 import { observable } from 'mobx';
-import { JsonNode, jsonToElements } from '../../utils/json-to-nodes';
+import {
+  JsonNode as JsonNodeBase,
+  jsonToElements
+} from '../../utils/json-to-nodes';
 import { JsonElement } from '../json-element';
+
+interface JsonNode extends JsonNodeBase {
+  expandedChildrenCount?: number;
+}
 
 interface Props {
   json: Record<string, any>;
@@ -22,16 +29,43 @@ export default (props: Props) => {
     }, {}, { deep: false }),
     elHeight: 24,
     height: 0,
-    index: 0,
-    left: 0,
-    right: 0,
+    _left: 0,
+    _right: 0,
     visible: new Array<JsonNode>(),
 
     get elements() { return state.shallow.elements; },
     set elements(value: JsonNode[]) { state.shallow.elements = value; },
 
+    get left() { return state._left; },
+    set left(value: number) {
+      state._left = Math.max(0, value);
+    },
+
+    get right() { return state._right; },
+    set right(value: number) {
+      state._right = Math.max(0, value);
+    },
+
+    get firstVisible() {
+      return state.visible[0];
+    },
+
+    get lastVisible() {
+      return state.visible[state.visible.length - 1];
+    },
+
+    get windowStart() {
+      if (!state.firstVisible) return -1;
+      return state.firstVisible.index;
+    },
+
+    get windowEnd() {
+      if (!state.lastVisible) return -1;
+      return state.lastVisible.index;
+    },
+
     get scrollTop() {
-      return (state.left - 1) * state.elHeight;
+      return state.left * state.elHeight;
     },
 
     get scrollBottom() {
@@ -42,16 +76,35 @@ export default (props: Props) => {
       return Math.ceil(state.height / state.elHeight) + 1;
     },
 
+    findNodeIndex(path: string[]) {
+      const { elements } = state;
+      const pathStr = path.toString();
+
+      for (let i = 0; i < elements.length; ++i) {
+        const cur = elements[i];
+        const curPathStr = cur.path.toString();
+        if (curPathStr === pathStr)
+          return i;
+        if (!pathStr.startsWith(curPathStr))
+          i += cur.childrenCount || 0;
+      }
+
+      return -1;
+    },
+
+    findNode(path: string[]) {
+      return state.elements[state.findNodeIndex(path)];
+    },
+
     setJson(json: any) {
-      const elements = jsonToElements(json);
-      state.elements = elements;
+      state.elements = jsonToElements(json)
+        .map(x => ({ ...x, expandedChildrenCount: x.childrenCount }));
       state.setHeight(state.height);
     },
 
     setHeight(height: number) {
       state.height = height;
-      state.index = 0;
-      state.left = -state.elCount;
+      state.left = 0;
       state.right = state.elements.length;
       state.visible = [];
       state.moveNext(state.elCount);
@@ -61,41 +114,104 @@ export default (props: Props) => {
     setScrollTop(scrollTop: number) {
       const deltaY = Math.abs(scrollTop - state.scrollTop);
 
-      if (deltaY < state.elHeight) return;
-
-      if (scrollTop > state.scrollTop)
-        state.moveNext(Math.floor(deltaY / state.elHeight));
+      if (scrollTop < state.scrollTop)
+        return state.movePrev(Math.ceil(deltaY / state.elHeight));
       else
-        state.movePrev(Math.floor(deltaY / state.elHeight));
+        return state.moveNext(Math.floor(deltaY / state.elHeight));
     },
 
     moveNext(steps = 1) {
-      let { index, left, right, visible, elCount, elements } = state;
-      for (let i = 0; i < steps; ++i) {
-        if (index >= elements.length) break;
-        ++left;
+      if (steps === 0) return;
+      let {
+        left, right, elCount,
+        visible, lastVisible, elements,
+        windowEnd: index,
+      } = state;
+
+      if (lastVisible && lastVisible.collapsed && !lastVisible.end)
+        index += lastVisible.childrenCount!;
+
+      for (let i = 0; i < steps && index < elements.length - 1; ++i) {
+        const element = elements[++index];
+        if (element.collapsed && element.end) continue;
+
         --right;
-        visible = [
-          ...visible.slice(index > elCount ? 1 : 0),
-          elements[index++],
-        ];
+        if (visible.length > elCount) {
+          visible = visible.slice(1);
+          ++left;
+        }
+        visible.push(element)
+
+        if (element.collapsed)
+          index += element.childrenCount!;
       }
-      Object.assign(state, { index, left, right, visible });
+      if (state.windowEnd === state.elements.length - 1) right = 0;
+      Object.assign(state, { left, right, visible });
     },
 
     movePrev(steps = 1) {
-      let { index, left, right, visible, elements } = state;
-      for (let i = 0; i < steps; ++i) {
-        if (index <= visible.length) break;
-        --left;
+      if (steps === 0) return;
+      let { left, right, elCount, visible, elements } = state;
+      let index = state.windowStart;
+
+      for (let i = 0; i < steps && index > 0; ++i) {
+        --index;
+        while (elements[index].collapsed && elements[index].end) {
+          index -= elements[index].childrenCount!;
+        }
+        const element = elements[index];
+
+        left = Math.max(left - 1, 0);
         ++right;
         visible = [
-          elements[--index - visible.length],
-          ...visible.slice(0, -1),
+          element,
+          ...visible.slice(0, visible.length > elCount ? -1 : elCount),
         ];
       }
-      Object.assign(state, { index, left, right, visible });
+      Object.assign(state, { left, right, visible });
     },
+
+    setCollapsed(index: number, flag: boolean) {
+      const element = state.elements[index];
+      const endIndex = index + element.childrenCount!;
+      state.elements[index].collapsed = flag;
+      state.elements[endIndex].collapsed = flag;
+      const expandedCount = element.expandedChildrenCount!;
+
+      if (flag) {
+        state.right -= expandedCount;
+      } else {
+        const countDiff = state.elCount - state.visible.length;
+        state.right += (expandedCount - countDiff);
+      }
+
+      for (
+        let path = element.path.slice(0, -1), count = expandedCount;
+        path.length > 0;
+        path = path.slice(0, -1), ++count
+      ) {
+        const parent = state.findNode(path);
+        const delta = (flag ? -1 : 1) * count;
+
+        parent.expandedChildrenCount! += delta;
+        state.elements[
+          parent.index + parent.childrenCount!
+        ].expandedChildrenCount! += delta;
+      }
+
+      const { visible } = state;
+      state.right += visible.length - 1;
+      state.visible = visible.slice(0, 1);
+      state.moveNext(state.elHeight);
+    },
+
+    collapse(index: number) {
+      return state.setCollapsed(index, true);
+    },
+
+    expand(index: number) {
+      return state.setCollapsed(index, false);
+    }
   }));
 
   useEffect(() => {
@@ -121,7 +237,11 @@ export default (props: Props) => {
       <div className="json-view">
         <div id="json-view" style={{ height: "100%", overflow: 'auto' }}>
           <div style={{ height: state.scrollTop }}></div>
-          <Elements elements={state.visible} eachHeight={state.elHeight} />
+          <Elements
+            elements={state.visible}
+            eachHeight={state.elHeight}
+            onCollapse={state.collapse}
+            onExpand={state.expand} />
           <div style={{ height: state.scrollBottom }}></div>
         </div>
       </div>
@@ -129,12 +249,19 @@ export default (props: Props) => {
   });
 };
 
-function Elements(props: { elements: JsonNode[], eachHeight: number }) {
+function Elements(props: {
+  elements: JsonNode[],
+  eachHeight: number,
+  onCollapse: (index: number) => void,
+  onExpand: (index: number) => void,
+}) {
   return (
     <>{
       props.elements.map(element => JsonElement({
         element,
         height: props.eachHeight,
+        onCollapse: props.onCollapse,
+        onExpand: props.onExpand,
       }))
     }</>
   );

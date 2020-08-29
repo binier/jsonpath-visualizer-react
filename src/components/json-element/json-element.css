@@ -1,0 +1,5 @@
+.expand-button, .collapse-button {
+  position: absolute;
+  left: -15px;
+  top: 4px;
+}

@@ -9,7 +9,7 @@
   font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace;
 }
 
-.json-bracket, .json-comma, .json-colon {
+.json-bracket, .json-spread, .json-comma, .json-colon {
   color: #a3a9ad;
 }
 

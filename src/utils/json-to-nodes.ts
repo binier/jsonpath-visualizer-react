@@ -10,6 +10,7 @@ interface JsonNodeTypesMap {
 export type JsonNodeTypes = keyof JsonNodeTypesMap;
 
 export interface JsonNode<T extends JsonNodeTypes = any> {
+  index: number;
   type: T;
   path: string[];
   value: JsonNodeTypesMap[T];
@@ -21,7 +22,7 @@ export interface JsonNode<T extends JsonNodeTypes = any> {
 
 function* jsonToElementsGen(
   json: any, path: string[] = []
-): Generator<JsonNode> {
+): Generator<Omit<JsonNode, 'index'>> {
   const entries = Object.entries(json);
   let index = 0;
   for (let [k, v] of entries) {
@@ -50,6 +51,7 @@ function* jsonToElementsGen(
 
 export function jsonToElements(json: any) {
   const root = {
+    index: 0,
     type: Array.isArray(json) ? 'array' : typeof json,
     path: [],
     value: json,
@@ -57,13 +59,18 @@ export function jsonToElements(json: any) {
     childrenCount: 0,
     isLastChild: true,
   };
+  const list: JsonNode[] = [root];
 
-  const list = [root, ...jsonToElementsGen(json)];
+  let index = 0;
+  for (let el of jsonToElementsGen(json))
+    list.push(Object.assign(el, { index: ++index }));
 
   root.childrenCount = list.length;
 
-  if (root.childrenCount > 0)
-    list.push({ ...root, end: true })
+  if (root.childrenCount > 1)
+    list.push({ ...root, index: ++index, end: true });
+  else
+    --root.childrenCount;
 
   return list;
 }

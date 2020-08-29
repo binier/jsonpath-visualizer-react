@@ -1,5 +1,8 @@
 import React from 'react';
+import './json-element.css';
 import { JsonNode } from "../../utils/json-to-nodes";
+import { ExpandButton } from '../expand-button';
+import { CollapseButton } from '../collapse-button';
 
 type FullProps<T = { [key: string]: any }> = T & React.HTMLProps<any>;
 
@@ -12,18 +15,26 @@ function genElementProps(
     key: element.path + (element.end ? '$' : ''),
     style: {
       height,
-      paddingLeft: element.path.length * 20,
+      position: 'relative',
+      marginLeft: element.path.length * 20,
       ...style,
     },
   };
 }
 
-interface ElementProps {
+interface JsonNestedProps {
   element: JsonNode;
+  onCollapse: (index: number) => void;
+  onExpand: (index: number) => void;
+}
+
+interface ElementProps extends JsonNestedProps {
   height: number;
 };
 
-export default function ({ element, height }: ElementProps) {
+export default function (
+  { element, height, onCollapse, onExpand }: ElementProps
+) {
   const props = genElementProps(element, height);
 
   if (element.end) {
@@ -38,13 +49,13 @@ export default function ({ element, height }: ElementProps) {
   if (element.type === 'object')
     return (
       <div {...props}>
-        <JsonObject element={element} />
+        <JsonObject {...{ element, onCollapse, onExpand }} />
       </div>
     );
   if (element.type === 'array')
     return (
       <div {...props}>
-        <JsonArray element={element} />
+        <JsonArray {...{ element, onCollapse, onExpand }} />
       </div>
     );
 
@@ -63,6 +74,10 @@ const JsonBracket = ({ type, closing }: {
       {(type === 'array' ? '[]' : '{}')[closing ? 1 : 0]}
     </span>
   );
+
+const JsonSpread = () => (
+  <span className="json-spread">...</span>
+);
 
 const JsonComma = () => (
   <span className="json-comma">,</span>
@@ -92,19 +107,26 @@ const JsonScalar = ({ element }: { element: JsonNode }) => (
 );
 
 /** array or object */
-const JsonNested = ({ element }: { element: JsonNode }) => {
+const JsonNested = ({ element, onCollapse, onExpand }: JsonNestedProps) => {
   const field = element.path[element.path.length - 1];
-  const isRoot = !!element.path.length;
+  const isRoot = !element.path.length;
   return (
     <>
-      {isRoot &&
+      {!isRoot &&
         <>
+          {element.childrenCount! > 0 &&
+            (element.collapsed
+              ? <ExpandButton onClick={() => onExpand(element.index)} />
+              : <CollapseButton onClick={() => onCollapse(element.index)} />
+            )
+          }
           <JsonField name={field} />
           <JsonColon />
         </>
       }
       <JsonBracket type={element.type} closing={false} />
-      {element.childrenCount === 0 &&
+      {element.collapsed && <JsonSpread />}
+      {(element.childrenCount === 0 || element.collapsed) &&
         <JsonBracket type={element.type} closing={true} />}
     </>
   );
