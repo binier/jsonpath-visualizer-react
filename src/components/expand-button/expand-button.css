@@ -1,0 +1,7 @@
+.expand-button {
+  cursor: pointer;
+  opacity: .8;
+  color: #fff;
+  width: 11px;
+  height: 11px;
+}
