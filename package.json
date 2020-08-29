@@ -26,12 +26,13 @@
     "typescript": "~3.7.2"
   },
   "scripts": {
-    "start": "npm run watch:css && react-scripts start",
-    "build": "npm run build:css && react-scripts build",
+    "start:react": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:css": "NODE_ENV=production postcss src/assets/tailwind.css -o src/assets/main.css",
-    "watch:css": "postcss src/assets/tailwind.css -o src/assets/main.css"
+    "start": "npm-run-all build:css --parallel watch:css start:react",
+    "build": "NODE_ENV=production npm run build:css && react-scripts build",
+    "build:css": "postcss src/assets/tailwind.css -o src/assets/main.css",
+    "watch:css": "postcss src/assets/tailwind.css -o src/assets/main.css --watch"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.8.6",
+    "npm-run-all": "^4.1.5",
     "postcss-cli": "^7.1.1",
     "tailwindcss": "^1.7.1"
   }
