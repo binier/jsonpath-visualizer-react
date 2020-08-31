@@ -28,13 +28,15 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
+    "serve": "^11.3.2",
     "typescript": "~3.7.2"
   },
   "scripts": {
     "start:react": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start": "npm-run-all build:css --parallel watch:css start:react",
+    "dev": "npm-run-all build:css --parallel watch:css start:react",
+    "start": "serve -s build",
     "build": "NODE_ENV=production npm run build:css && react-scripts build",
     "build:css": "postcss src/assets/tailwind.css -o src/assets/main.css",
     "watch:css": "postcss src/assets/tailwind.css -o src/assets/main.css --watch"
