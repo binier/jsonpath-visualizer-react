@@ -32,6 +32,15 @@ interface ElementProps extends JsonNestedProps {
   height: number;
 };
 
+const JsonRow = ({props, matches, children}: React.PropsWithChildren<{
+  props: FullProps,
+  matches: boolean
+}>) => (
+  <div {...props} className={'json-row' + (matches ? ' json-matches' : '')}>
+    {children}
+  </div>
+);
+
 export default function (
   { element, height, onCollapse, onExpand }: ElementProps
 ) {
@@ -39,30 +48,30 @@ export default function (
 
   if (element.end) {
     return (
-      <div {...props}>
+      <JsonRow key={props.key} props={props} matches={!!element.matches}>
         <JsonBracket type={element.type} closing={!!element.end} />
         {!element.isLastChild && <JsonComma />}
-      </div>
+      </JsonRow>
     );
   }
 
   if (element.type === 'object')
     return (
-      <div {...props}>
+      <JsonRow key={props.key} props={props} matches={!!element.matches}>
         <JsonObject {...{ element, onCollapse, onExpand }} />
-      </div>
+      </JsonRow>
     );
   if (element.type === 'array')
     return (
-      <div {...props}>
+      <JsonRow key={props.key} props={props} matches={!!element.matches}>
         <JsonArray {...{ element, onCollapse, onExpand }} />
-      </div>
+      </JsonRow>
     );
 
   return (
-    <div {...props}>
+    <JsonRow key={props.key} props={props} matches={!!element.matches}>
       <JsonScalar element={element} />
-    </div>
+    </JsonRow>
   );
 }
 

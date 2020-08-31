@@ -1,3 +1,8 @@
+.json-row {
+  display: table;
+  padding: 0 4px;
+}
+
 .expand-button, .collapse-button {
   position: absolute;
   left: -15px;

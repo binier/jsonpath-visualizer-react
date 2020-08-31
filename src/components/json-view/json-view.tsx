@@ -1,19 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useLocalStore, useObserver } from 'mobx-react';
 import { debounce } from '../../utils';
 import { observable } from 'mobx';
-import {
-  JsonNode as JsonNodeBase,
-  jsonToElements
-} from '../../utils/json-to-nodes';
+import { JsonNode, jsonToElements } from '../../utils/json-to-nodes';
 import { JsonElement } from '../json-element';
-
-interface JsonNode extends JsonNodeBase {
-  expandedChildrenCount?: number;
-}
 
 interface Props {
   json: Record<string, any>;
+  matches: Array<string[]>;
 }
 
 const getEl = () => document.getElementById('json-view');
@@ -31,10 +25,22 @@ export default (props: Props) => {
     height: 0,
     _left: 0,
     _right: 0,
+    matchedPaths: new Set<string>(),
     visible: new Array<JsonNode>(),
 
     get elements() { return state.shallow.elements; },
-    set elements(value: JsonNode[]) { state.shallow.elements = value; },
+    set elements(value: JsonNode[]) {
+      state.shallow.elements = value.map(element => ({
+        ...element,
+        get matches() {
+          return this.path.some((_, i, path) => {
+            return state.matchedPaths.has(
+              path.slice(0, i + 1).toString()
+            );
+          }) || state.matchedPaths.has('');
+        },
+      }));
+    },
 
     get left() { return state._left; },
     set left(value: number) {
@@ -76,12 +82,12 @@ export default (props: Props) => {
       return Math.ceil(state.height / state.elHeight) + 1;
     },
 
-    findNodeIndex(path: string[]) {
-      const { elements } = state;
+    findNodeIndex(path: string[], elements?: JsonNode[]) {
+      elements = elements || state.elements;
       const pathStr = path.toString();
 
-      for (let i = 0; i < elements.length; ++i) {
-        const cur = elements[i];
+      for (let i = 0; i < elements!.length; ++i) {
+        const cur = elements![i];
         const curPathStr = cur.path.toString();
         if (curPathStr === pathStr)
           return i;
@@ -92,14 +98,24 @@ export default (props: Props) => {
       return -1;
     },
 
-    findNode(path: string[]) {
-      return state.elements[state.findNodeIndex(path)];
+    findNode(path: string[], elements?: JsonNode[]) {
+      elements = elements || state.elements;
+      return elements[state.findNodeIndex(path, elements)];
     },
 
     setJson(json: any) {
       state.elements = jsonToElements(json)
         .map(x => ({ ...x, expandedChildrenCount: x.childrenCount }));
       state.setHeight(state.height);
+    },
+
+    resetMatches() {
+      state.matchedPaths.clear();
+    },
+
+    setMatch(path: string[], flag = true) {
+      if (flag) state.matchedPaths.add(path.toString());
+      else state.matchedPaths.delete(path.toString());
     },
 
     setHeight(height: number) {
@@ -231,6 +247,11 @@ export default (props: Props) => {
       window.removeEventListener('scroll', resetScroll);
     };
   }, [props.json]);
+
+  useMemo(() => {
+    state.resetMatches();
+    props.matches.forEach(path => state.setMatch(path));
+  }, [props.matches]);
 
   return useObserver(() => {
     return (

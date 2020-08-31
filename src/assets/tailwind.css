@@ -37,4 +37,8 @@
   color: #66d9ef;
 }
 
+.json-matches {
+  @apply bg-green-900;
+}
+
 @tailwind utilities;

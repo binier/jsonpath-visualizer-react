@@ -16,7 +16,9 @@ export interface JsonNode<T extends JsonNodeTypes = any> {
   value: JsonNodeTypesMap[T];
   collapsed?: boolean;
   childrenCount?: number;
+  expandedChildrenCount?: number;
   isLastChild?: boolean;
+  matches?: boolean;
   end?: boolean;
 }
 
@@ -32,6 +34,7 @@ function* jsonToElementsGen(
       value: v,
       collapsed: false,
       childrenCount: 0,
+      expandedChildrenCount: 0,
       isLastChild: ++index === entries.length,
     };
 
@@ -39,10 +42,12 @@ function* jsonToElementsGen(
     if (typeof v === 'object') {
       for (let child of jsonToElementsGen(v, elData.path)) {
         ++elData.childrenCount;
+        ++elData.expandedChildrenCount;
         yield child;
       }
       if (elData.childrenCount > 0) {
         ++elData.childrenCount;
+        ++elData.expandedChildrenCount;
         yield { ...elData, end: true };
       }
     }
@@ -57,6 +62,7 @@ export function jsonToElements(json: any) {
     value: json,
     collapsed: false,
     childrenCount: 0,
+    expandedChildrenCount: 0,
     isLastChild: true,
   };
   const list: JsonNode[] = [root];
@@ -66,6 +72,7 @@ export function jsonToElements(json: any) {
     list.push(Object.assign(el, { index: ++index }));
 
   root.childrenCount = list.length;
+  root.expandedChildrenCount = root.childrenCount;
 
   if (root.childrenCount > 1)
     list.push({ ...root, index: ++index, end: true });
