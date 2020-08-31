@@ -44,11 +44,15 @@ export default (props: Props) => {
 
     get left() { return state._left; },
     set left(value: number) {
+      if (state.windowEnd < state.elCount)
+        state._left = 0;
       state._left = Math.max(0, value);
     },
 
     get right() { return state._right; },
     set right(value: number) {
+      if (state.windowEnd === state.elements.length - 1)
+        state._right = 0;
       state._right = Math.max(0, value);
     },
 
@@ -161,7 +165,6 @@ export default (props: Props) => {
         if (element.collapsed)
           index += element.childrenCount!;
       }
-      if (state.windowEnd === state.elements.length - 1) right = 0;
       Object.assign(state, { left, right, visible });
     },
 
