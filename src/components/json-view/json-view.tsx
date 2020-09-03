@@ -49,15 +49,11 @@ export default (props: Props) => {
 
     get left() { return state._left; },
     set left(value: number) {
-      if (state.windowEnd < state.elCount)
-        state._left = 0;
       state._left = Math.max(0, value);
     },
 
     get right() { return state._right; },
     set right(value: number) {
-      if (state.windowEnd === state.elements.length - 1)
-        state._right = 0;
       state._right = Math.max(0, value);
     },
 
@@ -132,7 +128,7 @@ export default (props: Props) => {
       state.left = 0;
       state.right = state.elements.length;
       state.visible = [];
-      state.moveNext(state.elCount);
+      state.moveNext(state.elCount)
       // TODO: handle height change
     },
 
@@ -161,7 +157,7 @@ export default (props: Props) => {
         if (element.collapsed && element.end) continue;
 
         --right;
-        if (visible.length > elCount) {
+        if (visible.length >= elCount) {
           visible = visible.slice(1);
           ++left;
         }
@@ -189,7 +185,7 @@ export default (props: Props) => {
         ++right;
         visible = [
           element,
-          ...visible.slice(0, visible.length > elCount ? -1 : elCount),
+          ...visible.slice(0, visible.length >= elCount ? -1 : elCount),
         ];
       }
       Object.assign(state, { left, right, visible });
