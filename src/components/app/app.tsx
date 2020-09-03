@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { JSONPath } from 'jsonpath-plus';
 import { JsonView } from '../json-view';
 import { debounce, sampleJson } from '../../utils';
@@ -10,11 +10,12 @@ interface JsonChooserProps {
 }
 
 function JsonChooser({ onJson, onError }: JsonChooserProps) {
-  const [sampleCount, setSampleCount] = useState(1000);
+  const [sampleCountStr, setSampleCountStr] = useState('1000');
 
-  const onSampleCountInput = useCallback((value: string) => {
-    setSampleCount(Math.abs(parseInt(value)));
-  }, [setSampleCount]);
+  const sampleCount = useMemo(
+    () => parseInt(sampleCountStr) || 1000,
+    [sampleCountStr]
+  );
 
   return (
     <div className="p-2 m-auto text-center text-gray-700 md:w-4/6 lg:w-3/6">
@@ -29,8 +30,8 @@ function JsonChooser({ onJson, onError }: JsonChooserProps) {
           <input
             type="text"
             className="w-full px-3 py-1 border rounded shadow md:w-2/6 focus:outline-none focus:shadow-outline"
-            value={sampleCount}
-            onChange={e => onSampleCountInput(e.target.value)}
+            value={sampleCountStr}
+            onChange={e => setSampleCountStr(e.target.value)}
           />
         </label>
         <button
