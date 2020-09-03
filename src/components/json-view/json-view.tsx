@@ -20,13 +20,13 @@ export default (props: Props) => {
      * */
     shallow: observable({
       elements: new Array<JsonNode>(),
+      visible: new Array<JsonNode>(),
     }, {}, { deep: false }),
     elHeight: 24,
     height: 0,
     _left: 0,
     _right: 0,
     matchedPaths: new Set<string>(),
-    visible: new Array<JsonNode>(),
 
     get elements() { return state.shallow.elements; },
     set elements(value: JsonNode[]) {
@@ -40,6 +40,11 @@ export default (props: Props) => {
           }) || state.matchedPaths.has('');
         },
       }));
+    },
+
+    get visible() { return state.shallow.visible; },
+    set visible(value: JsonNode[]) {
+      state.shallow.visible = [...value];
     },
 
     get left() { return state._left; },
