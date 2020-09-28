@@ -41,36 +41,37 @@ const JsonRow = ({props, matches, children}: React.PropsWithChildren<{
   </div>
 );
 
+const JsonRowElement = (
+  { element, onCollapse, onExpand }: Omit<ElementProps, 'height'>
+) => {
+  if (element.end)
+    return (
+      <>
+        <JsonBracket type={element.type} closing={!!element.end} />
+        {!element.isLastChild && <JsonComma />}
+      </>
+    );
+
+  if (element.type === 'object')
+    return (<JsonObject {...{ element, onCollapse, onExpand }} />);
+  if (element.type === 'array')
+    return (<JsonArray {...{ element, onCollapse, onExpand }} />);
+
+  return (<JsonScalar element={element} />);
+};
+
 export default function (
   { element, height, onCollapse, onExpand }: ElementProps
 ) {
   const props = genElementProps(element, height);
 
-  if (element.end) {
-    return (
-      <JsonRow key={props.key} props={props} matches={!!element.matches}>
-        <JsonBracket type={element.type} closing={!!element.end} />
-        {!element.isLastChild && <JsonComma />}
-      </JsonRow>
-    );
-  }
-
-  if (element.type === 'object')
-    return (
-      <JsonRow key={props.key} props={props} matches={!!element.matches}>
-        <JsonObject {...{ element, onCollapse, onExpand }} />
-      </JsonRow>
-    );
-  if (element.type === 'array')
-    return (
-      <JsonRow key={props.key} props={props} matches={!!element.matches}>
-        <JsonArray {...{ element, onCollapse, onExpand }} />
-      </JsonRow>
-    );
-
   return (
     <JsonRow key={props.key} props={props} matches={!!element.matches}>
-      <JsonScalar element={element} />
+      <JsonRowElement
+        element={element}
+        onCollapse={onCollapse}
+        onExpand={onExpand}
+      />
     </JsonRow>
   );
 }
