@@ -82,7 +82,7 @@ export default (props: Props) => {
     },
 
     get elCount() {
-      return Math.ceil(state.height / state.elHeight) + 1;
+      return Math.ceil(state.height / state.elHeight);
     },
 
     findNodeIndex(path: string[], elements?: JsonNode[]) {
@@ -140,7 +140,7 @@ export default (props: Props) => {
     },
 
     moveNext(steps = 1) {
-      if (steps === 0) return;
+      if (steps <= 0) return;
       let {
         left, right, elCount,
         visible, lastVisible, elements,
@@ -168,7 +168,7 @@ export default (props: Props) => {
     },
 
     movePrev(steps = 1) {
-      if (steps === 0) return;
+      if (steps <= 0) return;
       let { left, right, elCount, visible, elements } = state;
       let index = state.windowStart;
 
@@ -199,8 +199,7 @@ export default (props: Props) => {
       if (flag) {
         state.right -= expandedCount;
       } else {
-        const countDiff = state.elCount - state.visible.length;
-        state.right += (expandedCount - countDiff);
+        state.right += expandedCount;
       }
 
       for (
@@ -221,6 +220,13 @@ export default (props: Props) => {
       state.right += visible.length - 1;
       state.visible = visible.slice(0, 1);
       state.moveNext(state.elCount - 1);
+
+      // when user collapses node on last page, moveNext can't fill the
+      // entire visible array. It needs to movePrev as well and scroll
+      // up, so that whole view is filled with nodes.
+      const countDiff = state.elCount - state.visible.length;
+      state.movePrev(countDiff);
+      state.right -= countDiff * 2;
     },
 
     collapse(index: number) {
