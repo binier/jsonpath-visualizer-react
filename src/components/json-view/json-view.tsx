@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLocalStore, useObserver } from 'mobx-react';
 import { debounce } from '../../utils';
 import { observable } from 'mobx';
@@ -9,8 +9,6 @@ interface Props {
   json: Record<string, any>;
   matches: Array<string[]>;
 }
-
-const getEl = () => document.getElementById('json-view');
 
 export default (props: Props) => {
   const state = useLocalStore(() => ({
@@ -234,9 +232,11 @@ export default (props: Props) => {
     }
   }));
 
+  const viewRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const resetHeight = debounce(() => {
-      state.setHeight(getEl()!.clientHeight);
+      state.setHeight(viewRef.current!.clientHeight || 0);
     }, 200);
     const resetScroll = (e: any) => {
       state.setScrollTop(e.target.scrollTop);
@@ -245,10 +245,10 @@ export default (props: Props) => {
     state.setJson(props.json)
 
     window.addEventListener('resize', resetHeight);
-    getEl()!.addEventListener('scroll', resetScroll);
+    viewRef.current!.addEventListener('scroll', resetScroll);
     return () => {
       window.removeEventListener('resize', resetHeight);
-      window.removeEventListener('scroll', resetScroll);
+      viewRef.current!.removeEventListener('scroll', resetScroll);
     };
   }, [props.json]);
 
@@ -260,7 +260,7 @@ export default (props: Props) => {
   return useObserver(() => {
     return (
       <div className="json-view">
-        <div id="json-view" style={{ height: "100%", overflow: 'auto' }}>
+        <div ref={viewRef} style={{ height: "100%", overflow: 'auto' }}>
           <div style={{ height: state.scrollTop }}></div>
           <Elements
             elements={state.visible}
