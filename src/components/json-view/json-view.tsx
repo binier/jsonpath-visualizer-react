@@ -222,7 +222,7 @@ export default (props: Props) => {
       const { visible } = state;
       state.right += visible.length - 1;
       state.visible = visible.slice(0, 1);
-      state.moveNext(state.elHeight);
+      state.moveNext(state.elCount - 1);
     },
 
     collapse(index: number) {
