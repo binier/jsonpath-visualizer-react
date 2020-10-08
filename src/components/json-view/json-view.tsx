@@ -27,18 +27,7 @@ export default (props: Props) => {
     matchedPaths: new Set<string>(),
 
     get elements() { return state.shallow.elements; },
-    set elements(value: JsonNode[]) {
-      state.shallow.elements = value.map(element => ({
-        ...element,
-        get matches() {
-          return this.path.some((_, i, path) => {
-            return state.matchedPaths.has(
-              path.slice(0, i + 1).toString()
-            );
-          }) || state.matchedPaths.has('');
-        },
-      }));
-    },
+    set elements(value: JsonNode[]) { state.shallow.elements = value; },
 
     get visible() { return state.shallow.visible; },
     set visible(value: JsonNode[]) {
@@ -107,8 +96,24 @@ export default (props: Props) => {
     },
 
     setJson(json: any) {
-      state.elements = jsonToElements(json)
-        .map(x => ({ ...x, expandedChildrenCount: x.childrenCount }));
+      function matches(this: JsonNode) {
+        return this.path.some((_, i, path) => {
+          return state.matchedPaths.has(
+            path.slice(0, i + 1).toString()
+          );
+        }) || state.matchedPaths.has('');
+      }
+
+      const elements = jsonToElements(json);
+
+      elements.forEach(element => {
+        element.expandedChildrenCount = element.childrenCount;
+        Object.defineProperty(element, 'matches', {
+          get: matches,
+        });
+      });
+
+      state.elements = elements;
       state.setHeight(state.height);
     },
 
